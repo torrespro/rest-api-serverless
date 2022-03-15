@@ -1,0 +1,12 @@
+version = 0.1
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "sam-app4"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-l5xzffxalkkt"
+s3_prefix = "sam-app4"
+region = "us-east-1"
+capabilities = "CAPABILITY_IAM"
+confirm_changeset = false
+image_repositories = []
+disable_rollback = true

@@ -1,0 +1,264 @@
+Transform: 'AWS::Serverless-2016-10-31'
+Resources:
+    usersFunction:
+        # This resource creates a Lambda function.
+        Type: 'AWS::Serverless::Function'
+        Properties:
+            # This function uses the Nodejs v12.x runtime.
+            Runtime: nodejs12.x
+            # This is the Lambda function's handler.
+            Handler: users.usersHandler
+            # The location of the Lambda function code.
+            CodeUri: ./src
+            # Event sources to attach to this function. In this case, we are attaching
+            # multiple API Gateway endpoints to the Lambda function. The function is
+            # called when a HTTP request is made to the API Gateway endpoint.
+            Events:
+                lambdaGetAllUsers:
+                    # Define an API Gateway endpoint that responds to HTTP GET at /users
+                    Type: Api
+                    Properties:
+                        Path: /api/v1/users
+                        Method: GET
+                lambdaAddUser:
+                    Type: Api
+                    Properties:
+                        Path: /api/v1/users
+                        Method: POST
+                lambdaUpdateUser:
+                    Type: Api
+                    Properties:
+                        Path: /api/v1/users/{userid}
+                        Method: PUT
+                lambdaDeleteUser:
+                    Type: Api
+                    Properties:
+                        Path: /api/v1/users/{userid}
+                        Method: DELETE
+                lambdaCommentsByUser:
+                    Type: Api
+                    Properties:
+                        Path: /api/v1/users/{userid}/comments
+                        Method: GET
+            Policies:
+              # Give Create/Read/Update/Delete Permissions to the SampleTable
+              - DynamoDBCrudPolicy:
+                  TableName: !Ref bookStoreTable
+            Environment:
+              Variables:
+                # Make table name accessible as environment variable from function code during execution
+                SAMPLE_TABLE: !Ref bookStoreTable
+
+    bookStoreTable:
+        Type: 'AWS::DynamoDB::Table'
+        Properties:
+            TableName: entity
+            AttributeDefinitions:
+                -   AttributeName: bookId
+                    AttributeType: S
+                -   AttributeName: "id"
+                    AttributeType: "S"
+                -   AttributeName: "type"
+                    AttributeType: "S"
+                -   AttributeName: "userId"
+                    AttributeType: "S"
+            KeySchema:
+                -   AttributeName: id
+                    KeyType: HASH
+                -   AttributeName: "type"
+                    KeyType: "RANGE"
+            ProvisionedThroughput:
+                ReadCapacityUnits: 5
+                WriteCapacityUnits: 5
+            GlobalSecondaryIndexes:
+                - IndexName: "typeGsi"
+                  KeySchema:
+                      - AttributeName: "type"
+                        KeyType: "HASH"
+                  Projection:
+                      ProjectionType: "ALL"
+                  ProvisionedThroughput:
+                      ReadCapacityUnits: 1
+                      WriteCapacityUnits: 1
+                - IndexName: "userIdGsi"
+                  KeySchema:
+                      - AttributeName: "userId"
+                        KeyType: "HASH"
+                      - AttributeName: "type"
+                        KeyType: "RANGE"
+                  Projection:
+                      ProjectionType: "ALL"
+                  ProvisionedThroughput:
+                      ReadCapacityUnits: 1
+                      WriteCapacityUnits: 1
+                - IndexName: "bookIdGsi"
+                  KeySchema:
+                      - AttributeName: "bookId"
+                        KeyType: "HASH"
+                      - AttributeName: "type"
+                        KeyType: "RANGE"
+                  Projection:
+                      ProjectionType: "ALL"
+                  ProvisionedThroughput:
+                      ReadCapacityUnits: 1
+                      WriteCapacityUnits: 1
+
+    booksFunction:
+        # This resource creates a Lambda function.
+        Type: 'AWS::Serverless::Function'
+        Properties:
+            # This function uses the Nodejs v12.x runtime.
+            Runtime: nodejs12.x
+            # This is the Lambda function's handler.
+            Handler: books.booksHandler
+            # The location of the Lambda function code.
+            CodeUri: ./src
+            # Event sources to attach to this function. In this case, we are attaching
+            # multiple API Gateway endpoints to the Lambda function. The function is
+            # called when a HTTP request is made to the API Gateway endpoint.
+            Events:
+                lambdaGetAllBooks:
+                    # Define an API Gateway endpoint that responds to HTTP GET at /users
+                    Type: Api
+                    Properties:
+                        Path: /api/v1/books
+                        Method: GET
+                lambdaGetABook:
+                  # Define an API Gateway endpoint that responds to HTTP GET at /users
+                  Type: Api
+                  Properties:
+                    Path: /api/v1/books/{bookid}
+                    Method: GET
+                lambdaAddBook:
+                    Type: Api
+                    Properties:
+                        Path: /api/v1/books
+                        Method: POST
+                lambdaUpdateBook:
+                    Type: Api
+                    Properties:
+                        Path: /api/v1/books/{bookid}
+                        Method: PUT
+                lambdaDeleteBook:
+                    Type: Api
+                    Properties:
+                        Path: /api/v1/books/{bookid}
+                        Method: DELETE
+            Policies:
+                # Give Create/Read/Update/Delete Permissions to the SampleTable
+                - DynamoDBCrudPolicy:
+                    TableName: !Ref bookStoreTable
+            Environment:
+                Variables:
+                    # Make table name accessible as environment variable from function code during execution
+                    SAMPLE_TABLE: !Ref bookStoreTable
+
+    commentsFunction:
+        # This resource creates a Lambda function.
+        Type: 'AWS::Serverless::Function'
+        Properties:
+            # This function uses the Nodejs v12.x runtime.
+            Runtime: nodejs12.x
+            # This is the Lambda function's handler.
+            Handler: comments.commentsHandler
+            # The location of the Lambda function code.
+            CodeUri: ./src
+            # Event sources to attach to this function. In this case, we are attaching
+            # multiple API Gateway endpoints to the Lambda function. The function is
+            # called when a HTTP request is made to the API Gateway endpoint.
+            Events:
+                lambdaGetAllComments:
+                    # Define an API Gateway endpoint that responds to HTTP GET at /users
+                    Type: Api
+                    Properties:
+                        Path: /api/v1/comments
+                        Method: GET
+                lambdaAddComment:
+                    Type: Api
+                    Properties:
+                        Path: /api/v1/comments
+                        Method: POST
+                lambdaUpdateComment:
+                    Type: Api
+                    Properties:
+                        Path: /api/v1/comments/{commentid}
+                        Method: PUT
+                lambdaDeleteComment:
+                    Type: Api
+                    Properties:
+                        Path: /api/v1/comments/{commentid}
+                        Method: DELETE
+            Policies:
+                # Give Create/Read/Update/Delete Permissions to the SampleTable
+                - DynamoDBCrudPolicy:
+                    TableName: !Ref bookStoreTable
+            Environment:
+                Variables:
+                    # Make table name accessible as environment variable from function code during execution
+                    SAMPLE_TABLE: !Ref bookStoreTable
+
+    commentByIdFunction:
+        # This resource creates a Lambda function.
+        Type: 'AWS::Serverless::Function'
+        Properties:
+            # This function uses the Nodejs v12.x runtime.
+            Runtime: nodejs14.x
+            # This is the Lambda function's handler.
+            Handler: get-comment-by-id.getByIdHandler
+            # The location of the Lambda function code.
+            CodeUri: ./src
+            # Event sources to attach to this function. In this case, we are attaching
+            # multiple API Gateway endpoints to the Lambda function. The function is
+            # called when a HTTP request is made to the API Gateway endpoint.
+            Events:
+                lambdaGetAComment:
+                    # Define an API Gateway endpoint that responds to HTTP GET at /users
+                    Type: Api
+                    Properties:
+                        Path: /api/v1/comments/{commentid}
+                        Method: GET
+            Policies:
+                # Give Create/Read/Update/Delete Permissions to the SampleTable
+                - DynamoDBCrudPolicy:
+                      TableName: !Ref bookStoreTable
+            Environment:
+                Variables:
+                    # Make table name accessible as environment variable from function code during execution
+                    SAMPLE_TABLE: !Ref bookStoreTable
+
+    userByIdFunction:
+        # This resource creates a Lambda function.
+        Type: 'AWS::Serverless::Function'
+        Properties:
+            # This function uses the Nodejs v12.x runtime.
+            Runtime: nodejs14.x
+            # This is the Lambda function's handler.
+            Handler: get-user-by-id.getByIdHandler
+            # The location of the Lambda function code.
+            CodeUri: ./src
+            # Event sources to attach to this function. In this case, we are attaching
+            # multiple API Gateway endpoints to the Lambda function. The function is
+            # called when a HTTP request is made to the API Gateway endpoint.
+            Events:
+                lambdaGetAComment:
+                    # Define an API Gateway endpoint that responds to HTTP GET at /users
+                    Type: Api
+                    Properties:
+                        Path: /api/v1/users/{userid}
+                        Method: GET
+            Policies:
+                # Give Create/Read/Update/Delete Permissions to the SampleTable
+                - DynamoDBCrudPolicy:
+                      TableName: !Ref bookStoreTable
+            Environment:
+                Variables:
+                    # Make table name accessible as environment variable from function code during execution
+                    SAMPLE_TABLE: !Ref bookStoreTable
+
+Outputs:
+  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
+  # Find out more about other implicit resources you can reference within SAM
+  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
+  PublicApi:
+    Description: "API Gateway endpoint URL for Prod stage for Hello World function"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/users/"
